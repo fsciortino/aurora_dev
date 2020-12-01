@@ -4,7 +4,6 @@ to the ADAS ADF11 files (PLS and PRS).
 
 Convention:
 filt_num_dict = {'125 um be': '14', '12 um be': '15', '140um be': '14', 'none': '0', 'axuv': '10'}
-Note that PLS and PRS files used for DIII-D also have a 250nm SiO3 filter included.
 
 sciortino, 2020
 '''
@@ -83,16 +82,15 @@ for ii,cs in enumerate(files.keys()):
     # Convolution with SXR filter:
     lam_nm = res[cs].data['processed']['wave_vac']
     E_J = h*c/(lam_nm*1e-9)
-    E_eV = E_J/e
-    
-    # Expect PEC units to be photons*cm^3/s, unlike in https://open.adas.ac.uk/adf15 ???
+
+    # Expect PEC units to be photons/cm^3/s, as in https://open.adas.ac.uk/adf15
     pec_exc = res[cs].data['processed']['pecs'][:,0]
     pec_recomb = res[cs].data['processed']['pecs'][:,1] 
 
     trans = interp1d(phot_energy, transmission, kind='linear')(E_eV)
 
-    pls[cs] = np.sum(pec_exc * E_J * trans)
-    prs[cs] = np.sum(pec_recomb * E_J * trans)
+    pls[cs] = np.sum(pec_exc * E_J * ne_cm3 * trans)
+    prs[cs] = np.sum(pec_recomb * E_J * ne_cm3 * trans)
 
 
 # now read pls file using Aurora
@@ -104,7 +102,6 @@ prs_adas = aurora.atomic.interp_atom_prof(atom_data['prs'],np.log10(ne_cm3), np.
 
 # For PLS units, see e.g. https://open.adas.ac.uk/detail/adf11/pls96/pls96_c.dat
 
-# print PLS and PRS calculations from ColRadPy and directly from ADAS files:
 print(r'PLS colradpy [W cm^3]: ')
 print(pls)
 

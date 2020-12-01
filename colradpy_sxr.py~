@@ -4,7 +4,6 @@ to the ADAS ADF11 files (PLS and PRS).
 
 Convention:
 filt_num_dict = {'125 um be': '14', '12 um be': '15', '140um be': '14', 'none': '0', 'axuv': '10'}
-Note that PLS and PRS files used for DIII-D also have a 250nm SiO3 filter included.
 
 sciortino, 2020
 '''
@@ -22,7 +21,7 @@ import aurora
 # read filter function
 phot_energy=[]
 transmission=[]
-with open('/home/sciortino/aurora_dev/Be_filter_12um.txt','r') as f:
+with open('/home/sciortino/aurora_dev/Be_filter_140um.txt','r') as f:
     contents = f.readlines()
 for line in contents[2:]:
     tmp = line.strip().split()
@@ -31,14 +30,15 @@ for line in contents[2:]:
 phot_energy=np.concatenate(([0.,], np.array(phot_energy)))
 transmission=np.concatenate(([0.,],np.array(transmission)))
 
+
 fig,ax = plt.subplots()
 ax.plot(phot_energy, transmission)
 ax.set_xlabel('Photon energy [eV]')
 ax.set_ylabel('Transmission')
     
 # Use gfile and statefile in local directory:
-#geqdsk = omfit_eqdsk.OMFITgeqdsk('/home/sciortino/Aurora/examples/example.gfile')
-#inputgacode = omfit_gapy.OMFITgacode('/home/sciortino/Aurora/examples/example.input.gacode')
+geqdsk = omfit_eqdsk.OMFITgeqdsk('/home/sciortino/Aurora/examples/example.gfile')
+inputgacode = omfit_gapy.OMFITgacode('/home/sciortino/Aurora/examples/example.input.gacode')
 
 # save kinetic profiles on a rhop (sqrt of norm. pol. flux) grid
 
@@ -67,6 +67,9 @@ files = {'c0': 'mom97_ls#c0.dat',
 #          'ca17': 'lilike_lgy10#ca17.dat',
 #          'ca18': 'helike_adw05#ca18.dat'}
 
+colors = cm.rainbow(np.linspace(0, 1, len(files)))
+
+
 res = {}
 pls = {}
 prs = {}
@@ -81,18 +84,15 @@ for ii,cs in enumerate(files.keys()):
     res[cs].solve_quasi_static()
 
     # Convolution with SXR filter:
-    lam_nm = res[cs].data['processed']['wave_vac']
-    E_J = h*c/(lam_nm*1e-9)
-    E_eV = E_J/e
-    
-    # Expect PEC units to be photons*cm^3/s, unlike in https://open.adas.ac.uk/adf15 ???
-    pec_exc = res[cs].data['processed']['pecs'][:,0]
-    pec_recomb = res[cs].data['processed']['pecs'][:,1] 
+    lam = res[cs].data['processed']['wave_vac']
+    E_eV = h*c/(lam*1e-9) /e
+    pec_exc = res[cs].data['processed']['pecs'][:,0]  # ph cm$^{-3}$ s$^{-1}$
+    pec_recomb = res[cs].data['processed']['pecs'][:,1]  # ph cm$^{-3}$ s$^{-1}$
 
     trans = interp1d(phot_energy, transmission, kind='linear')(E_eV)
 
-    pls[cs] = np.sum(pec_exc * E_J * trans)
-    prs[cs] = np.sum(pec_recomb * E_J * trans)
+    pls[cs] = np.sum(pec_exc * E_eV * e * ne_cm3 * trans)
+    prs[cs] = np.sum(pec_recomb * E_eV * e * ne_cm3 * trans)
 
 
 # now read pls file using Aurora
@@ -102,17 +102,14 @@ atom_data = aurora.atomic.get_atom_data('C', ['prs'])
 prs_adas = aurora.atomic.interp_atom_prof(atom_data['prs'],np.log10(ne_cm3), np.log10(Te_eV))
 
 
-# For PLS units, see e.g. https://open.adas.ac.uk/detail/adf11/pls96/pls96_c.dat
-
-# print PLS and PRS calculations from ColRadPy and directly from ADAS files:
-print(r'PLS colradpy [W cm^3]: ')
+print(r'PLS colradpy [ph cm$^{-3}$ s$^{-1}$]: ')
 print(pls)
 
-print(r'PLS ADAS [W cm^3]: ')
+print(r'PLS ADAS [ph cm$^{-3}$ s$^{-1}$]: ')
 print(pls_adas)
 
-print(r'PRS colradpy [W cm^3]: ')
+print(r'PRS colradpy [ph cm$^{-3}$ s$^{-1}$]: ')
 print(prs)
 
-print(r'PRS ADAS [W cm^3]: ')
+print(r'PRS ADAS [ph cm$^{-3}$ s$^{-1}$]: ')
 print(prs_adas)
