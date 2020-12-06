@@ -39,7 +39,7 @@ ax.set_ylabel('Transmission')
 ne_cm3 = [1e14,] # cm^-3
 Te_eV = [100,] # eV
 
-imp = 'Ca'
+imp = 'C'
 
 if imp=='Be':
     filepath = '/home/sciortino/adf04_files/be/be_adf04_adas/'

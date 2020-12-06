@@ -29,8 +29,8 @@ fig, ax = plt.subplots()
 
 res = {}
 for ii,cs in enumerate(files.keys()):
-    res[cs] = colradpy(filepath+files[cs],[0],Te_grid,ne_grid,use_recombination=False,
-                       use_recombination_three_body=False)  #, temp_dens_pair=True)
+    res[cs] = colradpy(filepath+files[cs],[0],Te_grid,ne_grid,use_recombination=False,  # use_rec has issue with ca8 file
+                       use_recombination_three_body=True, temp_dens_pair=True)
     
     res[cs].make_ioniz_from_reduced_ionizrates()
     res[cs].suppliment_with_ecip()
@@ -40,7 +40,7 @@ for ii,cs in enumerate(files.keys()):
 
     # plot lines
     ax.vlines(res[cs].data['processed']['wave_vac'],np.zeros_like(res[cs].data['processed']['wave_vac']),
-              res[cs].data['processed']['pecs'][:,0,0,0],label=cs, color=colors[ii])
+              res[cs].data['processed']['pecs'][:,0,0],label=cs, color=colors[ii])
     
 
 ax.set_xlim(0,200)
@@ -55,10 +55,11 @@ pec_threshold=1e-20  #1e-31
 
 fig, ax = plt.subplots()
 for ii,cs in enumerate(files.keys()):
-    idxs = np.where(res[cs].data['processed']['pecs'][:,0,0,0]>pec_threshold)[0]
+    idxs = np.where(res[cs].data['processed']['pecs'][:,0,0]>pec_threshold)[0]
 
-    ax.vlines(res[cs].data['processed']['wave_vac'][idxs],np.zeros_like(res[cs].data['processed']['wave_vac'][idxs]),
-              res[cs].data['processed']['pecs'][idxs,0,0,0],label=cs, color=colors[ii])
+    ax.vlines(res[cs].data['processed']['wave_vac'][idxs],
+              np.zeros_like(res[cs].data['processed']['wave_vac'][idxs]),
+              res[cs].data['processed']['pecs'][idxs,0,0],label=cs, color=colors[ii])
 
 ax.set_xlim(0,200)
 ax.set_xlabel('Wavelength (nm)')
