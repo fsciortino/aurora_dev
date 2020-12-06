@@ -11,7 +11,7 @@ sciortino, 2020
 import matplotlib.pyplot as plt
 plt.ion()
 import omfit_eqdsk, omfit_gapy
-import numpy as np
+import numpy as np,os
 from colradpy import colradpy
 plt.ion()
 from matplotlib import cm
@@ -22,7 +22,7 @@ import aurora
 # read filter function
 phot_energy=[]
 transmission=[]
-with open('/home/sciortino/aurora_dev/Be_filter_12um.txt','r') as f:
+with open('/home/sciortino/aurora_dev/Be_filter_125um.txt','r') as f:
     contents = f.readlines()
 for line in contents[2:]:
     tmp = line.strip().split()
@@ -36,42 +36,33 @@ ax.plot(phot_energy, transmission)
 ax.set_xlabel('Photon energy [eV]')
 ax.set_ylabel('Transmission')
     
-# Use gfile and statefile in local directory:
-#geqdsk = omfit_eqdsk.OMFITgeqdsk('/home/sciortino/Aurora/examples/example.gfile')
-#inputgacode = omfit_gapy.OMFITgacode('/home/sciortino/Aurora/examples/example.input.gacode')
+ne_cm3 = [1e14,] # cm^-3
+Te_eV = [100,] # eV
 
-# save kinetic profiles on a rhop (sqrt of norm. pol. flux) grid
+imp = 'Ca'
 
-#rhop = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
-ne_cm3 = [1e14,] #inputgacode['ne']*1e13 # 1e19 m^-3 --> cm^-3
-Te_eV = [1000,] #inputgacode['Te']*1e3  # keV --> eV
+if imp=='Be':
+    filepath = '/home/sciortino/adf04_files/be/be_adf04_adas/'
+elif imp=='C':
+    filepath = '/home/sciortino/adf04_files/c/c_adf04_adas/'
+elif imp=='N':
+    filepath = '/home/sciortino/adf04_files/n/n_adf04_adas/'
+elif imp=='Ca':
+    filepath = '/home/sciortino/adf04_files/ca/ca_adf04_adas/'
+else:
+    raise ValueError('Unspecified ADF04 files path for this species!')
 
-filepath = '/home/sciortino/adf04_files/c/c_adf04_adas/'
-
-files = {'c0': 'mom97_ls#c0.dat',
-         'c1': 'mom97_ls#c1.dat',
-         'c2': 'mom97_ls#c2.dat',
-         'c3': 'mom97_ls#c3.dat',
-         'c4': 'mom97_ls#c4.dat',
-         'c5': 'mom97_n#c5.dat'}
-
-# filepath = '/home/sciortino/adf04_files/ca/ca_adf04_adas/'
-
-# files = {'ca8': 'mglike_lfm14#ca8.dat',
-#          'ca9': 'nalike_lgy09#ca9.dat',
-#          'ca10': 'nelike_lgy09#ca10.dat',
-#          'ca11': 'flike_mcw06#ca11.dat',
-#          'ca14': 'clike_jm19#ca14.dat',
-#          'ca15': 'blike_lgy12#ca15.dat',
-#          'ca16': 'belike_lfm14#ca16.dat',
-#          'ca17': 'lilike_lgy10#ca17.dat',
-#          'ca18': 'helike_adw05#ca18.dat'}
+filenames = os.listdir(filepath)
+# sort files based on their charge
+filenames = np.array(filenames)[np.argsort([file.split('#')[-1].split('.')[0] for file in filenames])]
 
 res = {}
 pls = {}
 prs = {}
-for ii,cs in enumerate(files.keys()):
-    res[cs] = colradpy(filepath+files[cs],[0],Te_eV,ne_cm3,use_recombination=True,
+for filename in filenames:
+    cs = filename.split('#')[-1].split('.')[0]
+    
+    res[cs] = colradpy(filepath+filename,[0],Te_eV,ne_cm3,use_recombination=True,
                        use_recombination_three_body=True, temp_dens_pair=True)
     
     res[cs].make_ioniz_from_reduced_ionizrates()
@@ -85,34 +76,34 @@ for ii,cs in enumerate(files.keys()):
     E_J = h*c/(lam_nm*1e-9)
     E_eV = E_J/e
     
-    # Expect PEC units to be photons*cm^3/s, unlike in https://open.adas.ac.uk/adf15 ???
+    # PEC units: photons*cm^3/s
     pec_exc = res[cs].data['processed']['pecs'][:,0]
     pec_recomb = res[cs].data['processed']['pecs'][:,1] 
 
     trans = interp1d(phot_energy, transmission, kind='linear')(E_eV)
 
+    # obtain pls and prs in W*cm^3 by multiplying by energy in Joules and by transmission of filter
     pls[cs] = np.sum(pec_exc * E_J * trans)
     prs[cs] = np.sum(pec_recomb * E_J * trans)
 
 
-# now read pls file using Aurora
-atom_data = aurora.atomic.get_atom_data('C', ['pls'])
+# now read pls file using Aurora -- default: index 14, corresponding to DIII-D's 125 um Be filter (with thin SiO3 layer)
+atom_data = aurora.atomic.get_atom_data(imp, ['pls'])
 pls_adas = aurora.atomic.interp_atom_prof(atom_data['pls'],np.log10(ne_cm3), np.log10(Te_eV))
-atom_data = aurora.atomic.get_atom_data('C', ['prs'])
+atom_data = aurora.atomic.get_atom_data(imp, ['prs'])
 prs_adas = aurora.atomic.interp_atom_prof(atom_data['prs'],np.log10(ne_cm3), np.log10(Te_eV))
 
 
 # For PLS units, see e.g. https://open.adas.ac.uk/detail/adf11/pls96/pls96_c.dat
 
 # print PLS and PRS calculations from ColRadPy and directly from ADAS files:
-print(r'PLS colradpy [W cm^3]: ')
-print(pls)
+print(' ')
+print('--'*10)
+print(fr'PLS colradpy [W cm^3]: {pls}')
 
-print(r'PLS ADAS [W cm^3]: ')
-print(pls_adas)
+print(fr'PLS ADAS [W cm^3]: {list(pls_adas[0])}')
 
-print(r'PRS colradpy [W cm^3]: ')
-print(prs)
+print('    ')
+print(fr'PRS colradpy [W cm^3]: {prs}')
 
-print(r'PRS ADAS [W cm^3]: ')
-print(prs_adas)
+print(fr'PRS ADAS [W cm^3]: {list(prs_adas[0])}')

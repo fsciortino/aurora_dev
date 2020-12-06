@@ -1,0 +1,30 @@
+import matplotlib.pyplot as plt
+plt.ion()
+import numpy as np
+
+import scipy.stats as stats
+
+mu=0
+variance=1
+
+sigma = np.sqrt(variance)
+x = np.linspace(mu - 5*sigma, mu+5*sigma, 1000)
+
+plt.figure()
+plt.plot(x, stats.norm.pdf(x,mu,sigma),c='b')
+plt.xlabel(r'$x/\sigma$',fontsize=18)
+plt.tight_layout()
+
+
+plt.figure()
+plt.plot(x, stats.norm.pdf(x,mu,sigma), c='b')
+plt.plot(x, stats.norm.pdf(x,mu+1,sigma), c='r')
+plt.xlabel(r'$x/\sigma$',fontsize=18)
+plt.tight_layout()
+
+plt.figure()
+plt.plot(x, stats.norm.pdf(x,mu,sigma), c='b')
+#plt.plot(x, stats.norm.pdf(x,mu+1,sigma), c='r')
+plt.plot(x, stats.norm.pdf(x,mu,sigma+0.5), c='g')
+plt.xlabel(r'$x/\sigma$',fontsize=18)
+plt.tight_layout()
