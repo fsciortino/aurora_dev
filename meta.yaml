@@ -1,0 +1,31 @@
+package:
+  name: aurorafusion
+  version: "{{ load_setup_py_data().version }}"
+
+source:
+  git_url: git@github.com:fsciortino/aurora.git
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - {{ compiler('fortran') }}
+  host:
+    - python
+    - numpy {{ numpy }}
+  run:
+    - python
+    - {{ pin_compatible('numpy') }}
+    
+test:
+  imports:
+    - aurora
+  commands:
+    - echo Running testing from meta.yaml
+    - python examples/basic.py
+
+about:
+  home: https://github.com/fsciortino/aurora	
+  license_file: USER_AGREEMENT.txt
+  summary: modern toolbox for impurity transport, neutrals and radiation modeling in fusion plasmas

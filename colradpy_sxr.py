@@ -3,7 +3,7 @@ Calculate SXR radiation terms for a specific filter function, creating iso-nucle
 to the ADAS ADF11 files (PLS and PRS). 
 
 Convention:
-filt_num_dict = {'125 um be': '14', '12 um be': '15', '140um be': '14', 'none': '0', 'axuv': '10'}
+filt_num_dict = {'125 um be': '14', '12 um be': '15', '140um be': '14', 'none': '0', 'axuv': '10', 'xtomo 50 um be': 9}
 Note that PLS and PRS files used for DIII-D also have a 250nm SiO3 filter included.
 
 sciortino, 2020
@@ -20,24 +20,13 @@ from scipy.constants import h, c, e
 import aurora
 
 # read filter function
-phot_energy=[]
-transmission=[]
-with open('/home/sciortino/aurora_dev/Be_filter_125um.txt','r') as f:
-    contents = f.readlines()
-for line in contents[2:]:
-    tmp = line.strip().split()
-    phot_energy.append(float(tmp[0]))
-    transmission.append(float(tmp[1]))
-phot_energy=np.concatenate(([0.,], np.array(phot_energy)))
-transmission=np.concatenate(([0.,],np.array(transmission)))
+base = '/home/sciortino/atomlib/atomdat_master/pue2020_data/'
+phot_energy, transmission = aurora.read_filter_response(base+'sxrfil9.dat', plot=True)
+#phot_energy, transmission = aurora.read_filter_response('/home/sciortino/aurora_dev/Be_filter_12um.txt', plot=True)
 
-fig,ax = plt.subplots()
-ax.plot(phot_energy, transmission)
-ax.set_xlabel('Photon energy [eV]')
-ax.set_ylabel('Transmission')
-    
+
 ne_cm3 = [1e14,] # cm^-3
-Te_eV = [100,] # eV
+Te_eV = [1000,] # eV
 
 imp = 'C'
 
@@ -72,7 +61,7 @@ for filename in filenames:
     res[cs].solve_quasi_static()
 
     # Convolution with SXR filter:
-    lam_nm = res[cs].data['processed']['wave_vac']
+    lam_nm = res[cs].data['processed']['wave_vac'][:,None]
     E_J = h*c/(lam_nm*1e-9)
     E_eV = E_J/e
     
@@ -83,14 +72,16 @@ for filename in filenames:
     trans = interp1d(phot_energy, transmission, kind='linear')(E_eV)
 
     # obtain pls and prs in W*cm^3 by multiplying by energy in Joules and by transmission of filter
-    pls[cs] = np.sum(pec_exc * E_J * trans)
-    prs[cs] = np.sum(pec_recomb * E_J * trans)
+    pls[cs] = np.sum(pec_exc * E_J * trans, axis=0)
+    prs[cs] = np.sum(pec_recomb * E_J * trans, axis=0)
 
 
 # now read pls file using Aurora -- default: index 14, corresponding to DIII-D's 125 um Be filter (with thin SiO3 layer)
-atom_data = aurora.atomic.get_atom_data(imp, ['pls'])
+atom_data = aurora.atomic.get_atom_data(imp, ['pls'],
+                                        [f'/home/sciortino/atomlib/atomdat_master/pue2020_data/pls_{imp}_9.dat'])
 pls_adas = aurora.atomic.interp_atom_prof(atom_data['pls'],np.log10(ne_cm3), np.log10(Te_eV))
-atom_data = aurora.atomic.get_atom_data(imp, ['prs'])
+atom_data = aurora.atomic.get_atom_data(imp, ['prs'],
+                                        [f'/home/sciortino/atomlib/atomdat_master/pue2020_data/prs_{imp}_9.dat'])
 prs_adas = aurora.atomic.interp_atom_prof(atom_data['prs'],np.log10(ne_cm3), np.log10(Te_eV))
 
 
