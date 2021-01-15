@@ -1,6 +1,6 @@
 '''Aurora-SOLPS coupling methods.
 
-F.Sciortino & R. Reksoatmodjo, 2021
+sciortino, 2021
 '''
 import pickle as pkl
 import matplotlib.pyplot as plt
