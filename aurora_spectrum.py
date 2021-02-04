@@ -9,7 +9,7 @@ import aurora
 from IPython import embed
 
 def plot_adas_spectrum(adf15_filepath, ion, ne_cm3, Te_eV, n0_cm3=0.0,
-                       ion_exc_rec_dens=None, ax=None):
+                       ion_exc_rec_dens=None, ax=None, plot_spec_tot=True, no_leg=False):
     '''Plot spectrum based on the lines contained in an ADAS ADF15 file
     at specific values of electron density and temperature. Charge state densities
     can be given explicitely, or alternatively charge state fractions will be automatically 
@@ -34,6 +34,10 @@ def plot_adas_spectrum(adf15_filepath, ion, ne_cm3, Te_eV, n0_cm3=0.0,
         emission from the given ADF15 file. If left to None, ionization equilibrium is assumed.
     ax : matplotlib Axes instance
         Axes to plot on. If left to None, a new figure is created.
+    plot_spec_tot : bool
+        If True, plot total spectrum (sum over all components) from given ADF15 file. 
+    no_leg : bool
+        If True, no plot legend is shown. Default is False, i.e. show legend.
 
     Returns
     -------
@@ -96,10 +100,8 @@ def plot_adas_spectrum(adf15_filepath, ion, ne_cm3, Te_eV, n0_cm3=0.0,
             pec_cx[ii] = pec_dict[lam]['checx'].ev(np.log10(ne_cm3),np.log10(Te_eV))
         if 'drsat' in pec_dict[lam]:
             pec_dr[ii] = pec_dict[lam]['drsat'].ev(np.log10(ne_cm3),np.log10(Te_eV))
-
-    #wave_m = wave_A*1e-10
     
-    # Doppler broadening: Loch's thesis equations 1.25, 1.26
+    # Doppler broadening
     mass = m_p * ion_A
     dnu_g = np.sqrt(2.*(Te_eV*q_electron)/mass)*(c_speed/wave_A)/c_speed
     
@@ -138,24 +140,25 @@ def plot_adas_spectrum(adf15_filepath, ion, ne_cm3, Te_eV, n0_cm3=0.0,
         spec_cx += interp1d(lams_profs_A[ii,:], n0_cm3*ion_exc_rec_dens[2]*pec_cx[ii]*theta[ii,:],
                                bounds_error=False, fill_value=0.0)(wave_final_A)
 
+    spec_tot = spec_ion+spec_exc+spec_rec+spec_dr+spec_cx
+    
     # plot all contributions
     if ax is None:
         fig,ax = plt.subplots()
-        leg = True
-    else:
-        leg = False
-    ax.plot(wave_final_A, spec_ion, c='r', label='ionization')
-    ax.plot(wave_final_A, spec_exc, c='b', label='excitation')
-    ax.plot(wave_final_A, spec_rec, c='g', label='radiative recomb')
-    ax.plot(wave_final_A, spec_dr, c='m', label='dielectronic recomb')
-    ax.plot(wave_final_A, spec_cx, c='c', label='charge exchange recomb')
-    ax.plot(wave_final_A, spec_ion+spec_exc+spec_rec+spec_dr+spec_cx, c='k', label='total')
-    if leg:
-        # don't add legend and axis label if axes are passed as argument
+    ax.plot(wave_final_A, spec_ion, c='r', label='' if no_leg else 'ionization')
+    ax.plot(wave_final_A, spec_exc, c='b', label='' if no_leg else 'excitation')
+    ax.plot(wave_final_A, spec_rec, c='g', label='' if no_leg else 'radiative recomb')
+    ax.plot(wave_final_A, spec_dr, c='m', label='' if no_leg else 'dielectronic recomb')
+    ax.plot(wave_final_A, spec_cx, c='c', label='' if no_leg else 'charge exchange recomb')
+    if plot_spec_tot:
+        ax.plot(wave_final_A, spec_tot, c='k', label='' if no_leg else 'total')
+        
+    if no_leg:
         ax.legend(loc='best').set_draggable(True)
-        ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_xlabel(r'$\lambda$ [$\AA$]')
+    ax.set_ylabel(r'$\epsilon$ [A.U.]')
 
-    return ax
+    return wave_final_A, spec_tot, ax
 
 
 
@@ -165,12 +168,45 @@ if __name__=='__main__':
     filepath_18='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca18.dat'
     filepath_17='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca17.dat'
     
-    Te_eV = 1000
+    Te_eV = 1e3 #500
     ne_cm3 = 1e14
 
-    ax = plot_adas_spectrum(filepath_18, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
-                       ion_exc_rec_dens=None)
-    ax = plot_adas_spectrum(filepath_17, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
-                            ion_exc_rec_dens=None, ax=ax)
-    ax = plot_adas_spectrum(filepath_19, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
-                       ion_exc_rec_dens=None)
+    fig = plt.figure()
+    fig.set_size_inches(10,7, forward=True)
+    ax1 = plt.subplot2grid((10,1),(0,0),rowspan = 1, colspan = 1, fig=fig)
+    ax2 = plt.subplot2grid((10,1),(1,0),rowspan = 9, colspan = 1, fig=fig, sharex=ax1)
+
+    ax2.set_xlim([3.17, 3.215]) # A, He-lke Ca spectrum
+    
+    with open('/home/sciortino/usr/python3modules/bsfc/data/hirexsr_wavelengths.csv', 'r') as f:
+        lineData = [s.strip().split(',') for s in f.readlines()]
+        lineLam = np.array([float(ld[1]) for ld in lineData[2:]])
+        lineZ = np.array([int(ld[2]) for ld in lineData[2:]])
+        lineName = np.array([ld[3] for ld in lineData[2:]])
+        
+    for ii,_line in enumerate(lineLam):
+        if _line>ax2.get_xlim()[0] and _line<ax2.get_xlim()[1]:
+            ax2.axvline(_line, c='r', ls='--')
+            ax1.axvline(_line, c='r', ls='--')
+            
+            ax1.text(_line, 0.5, lineName[ii], rotation=90, fontdict={'fontsize':14}) #, transform=ax1.transAxes)
+    ax1.axis('off')
+
+    # now add spectra
+    wave_final_A_18, spec_tot_18, ax = plot_adas_spectrum(
+        filepath_18, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
+        ion_exc_rec_dens=None, ax=ax2,  plot_spec_tot=False)
+    wave_final_A_17, spec_tot_17, ax = plot_adas_spectrum(
+        filepath_17, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
+        ion_exc_rec_dens=None, ax=ax2, plot_spec_tot=False, no_leg=True)
+    wave_final_A_19, spec_tot_19, ax = plot_adas_spectrum(
+        filepath_19, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
+        ion_exc_rec_dens=None, ax=ax2, plot_spec_tot=False, no_leg=True)
+
+    # add plot of total spectrum
+    wave_all_A = np.linspace(3.17,3.24, 10000)
+    spec_all = interp1d(wave_final_A_18, spec_tot_18, bounds_error=False, fill_value=0.0)(wave_all_A)
+    spec_all += interp1d(wave_final_A_17, spec_tot_17, bounds_error=False, fill_value=0.0)(wave_all_A)
+    spec_all += interp1d(wave_final_A_19, spec_tot_19, bounds_error=False, fill_value=0.0)(wave_all_A)
+    plt.gca().plot(wave_all_A, spec_all, 'k', label='total')
+    plt.gca().legend(loc='best').set_draggable(True)
