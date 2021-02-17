@@ -15,7 +15,7 @@ if ion=='Ca':
     Z_ion=20
     filepath_h='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca19.dat'
     filepath_he='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca18.dat'
-    filepath_17='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca17.dat'
+    filepath_li='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca17.dat'
     #ax2.set_xlim([3.17, 3.215]) # A, He-lke Ca spectrum
     #ax2.set_xlim([3.0, 3.215]) # includes Ly-a
 
@@ -23,7 +23,7 @@ elif ion=='Ar':
     Z_ion=18
     filepath_h='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar17.dat'
     filepath_he='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar16.dat'
-    filepath_17='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar15.dat'
+    filepath_li='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar15.dat'
     
 else:
     raise ValueError('Specify PEC files for this ion!')
@@ -62,25 +62,20 @@ atom_data = aurora.get_atom_data(ion,['scd','acd'])
 # always include charge exchange, although n0_cm3 may be 0
 logTe, fz, rates = aurora.get_frac_abundances(atom_data, np.array([ne_cm3,]), np.array([Te_eV,]), plot=False)
 
-
 # now add spectra
-out= aurora.get_local_spectrum(
-    filepath_he, ion, ne_cm3, Te_eV, n0_cm3=0.0,
-    ion_exc_rec_dens=[fz[0][-4], fz[0][-3], fz[0][-2]], # Li-like, He-like, H-like
-    dlam_A = 0.0002,
-    ax=ax2,  plot_spec_tot=False)
-wave_final_he, spec_ion_he, spec_exc_he, spec_rec_he, spec_dr_he, spec_cx_he, ax = out
-out = aurora.get_local_spectrum(
-    filepath_17, ion, ne_cm3, Te_eV, n0_cm3=0.0,
-    ion_exc_rec_dens=[fz[0][-5], fz[0][-4], fz[0][-3]], # Be-like, Li-like, He-like
-    dlam_A = 0.0002,
-    ax=ax2, plot_spec_tot=False, no_leg=True)
+out = aurora.get_local_spectrum(filepath_li, ion, ne_cm3, Te_eV, n0_cm3=0.0,
+                                ion_exc_rec_dens=[fz[0][-5], fz[0][-4], fz[0][-3]], # Be-like, Li-like, He-like
+                                dlam_A = 0.0002, ax=ax2, plot_spec_tot=False, no_leg=True, plot_all_lines=True)
 wave_final_li, spec_ion_li, spec_exc_li, spec_rec_li, spec_dr_li, spec_cx_li, ax = out
-out = aurora.get_local_spectrum(
-    filepath_h, ion, ne_cm3, Te_eV, n0_cm3=0.0,
-    ion_exc_rec_dens=[fz[0][-3], fz[0][-2], fz[0][-1]], # He-like, H-like, fully stripped
-    dlam_A = 0.0002,
-    ax=ax2, plot_spec_tot=False, no_leg=True)
+
+out= aurora.get_local_spectrum(filepath_he, ion, ne_cm3, Te_eV, n0_cm3=0.0,
+                               ion_exc_rec_dens=[fz[0][-4], fz[0][-3], fz[0][-2]], # Li-like, He-like, H-like
+                               dlam_A = 0.0002, ax=ax2,  plot_spec_tot=False, plot_all_lines=True)
+wave_final_he, spec_ion_he, spec_exc_he, spec_rec_he, spec_dr_he, spec_cx_he, ax = out
+
+out = aurora.get_local_spectrum(filepath_h, ion, ne_cm3, Te_eV, n0_cm3=0.0,
+                                ion_exc_rec_dens=[fz[0][-3], fz[0][-2], fz[0][-1]], # He-like, H-like, fully stripped
+                                dlam_A = 0.0002, ax=ax2, plot_spec_tot=False, no_leg=True, plot_all_lines=True)
 wave_final_h, spec_ion_h, spec_exc_h, spec_rec_h, spec_dr_h, spec_cx_h, ax = out
 
 spec_tot_he = spec_ion_he + spec_exc_he + spec_rec_he + spec_dr_he + spec_cx_he
@@ -94,4 +89,5 @@ spec_all = interp1d(wave_final_he, spec_tot_he, bounds_error=False, fill_value=0
 spec_all += interp1d(wave_final_li, spec_tot_li, bounds_error=False, fill_value=0.0)(wave_all)
 spec_all += interp1d(wave_final_h, spec_tot_h, bounds_error=False, fill_value=0.0)(wave_all)
 plt.gca().plot(wave_all, spec_all, 'k', label='total')
+
 plt.gca().legend(loc='best').set_draggable(True)
