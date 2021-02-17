@@ -127,9 +127,9 @@ if case=='CMOD':
     #gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
 
     # L-mode (new)
-    shot = 1100308004; case_num = 14 
-    path = f'/home/sciortino/SOLPS/RR_Lmode_attempt{case_num}/Output/'
-    gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
+    #shot = 1100308004; case_num = 14 
+    #path = f'/home/sciortino/SOLPS/RR_Lmode_attempt{case_num}/Output/'
+    #gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
 
     # H-mode
     #shot = 1100305023; case_num = 23 
@@ -137,10 +137,14 @@ if case=='CMOD':
     #gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
 
     # I-mode
-    shot = 1080416025; case_num = 15  # H-mode
+    #shot = 1080416025; case_num = 15  # H-mode
+    #path = f'/home/sciortino/SOLPS/RR_Imode_attempt{case_num}_old/Output/'
+    #gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
+
+    # I-mode (new)
+    shot = 1080416025; case_num = '15' # '15N'
     path = f'/home/sciortino/SOLPS/RR_Imode_attempt{case_num}/Output/'
     gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
-
     
     # load lyman-alpha data
     with open(f'/home/sciortino/tools3/neutrals/lyman_data_{shot}.pkl','rb') as f:
@@ -217,3 +221,19 @@ if case=='CMOD':
     overplot_machine(shot, [plt.gca()]) # overplot machine tiles
 
     compare_midplane_n0_with_expt(shot,  rhop_LFS, neut_LFS*1e-6)
+
+
+
+# compare neutral D2 pressure among CMOD shots
+
+tmin=0.8
+tmax=1.0
+from lyman_data import *
+
+for shot in [1100308004,1100305023,1080416025]:
+    out = get_CMOD_gas_fueling(shot, tmin=tmin, tmax=tmax, get_rate=False, plot=True)
+    plt.gca().set_title(f'shot {shot}')
+    
+    P_D2 = get_CMOD_var('p_D2',shot, tmin=tmin, tmax=tmax, plot=True)
+    plt.gca().set_title(f'shot {shot}')
+    print(f'shot {shot} had P_D2={P_D2}')
