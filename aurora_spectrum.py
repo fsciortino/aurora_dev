@@ -52,23 +52,29 @@ logTe, fz, rates = aurora.get_frac_abundances(atom_data, np.array([ne_cm3,]), np
 
 
 # now add spectra
-wave_final_A_18, spec_tot_18, ax = aurora.plot_local_spectrum(
-    filepath_18, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
-    ion_exc_rec_dens=[fz[0][-4], fz[0][-3], fz[0][-2]], # Li-like, He-like, H-like
-    ax=ax2,  plot_spec_tot=False)
-wave_final_A_17, spec_tot_17, ax = aurora.plot_local_spectrum(
-    filepath_17, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
-    ion_exc_rec_dens=[fz[0][-5], fz[0][-4], fz[0][-3]], # Be-like, Li-like, He-like
-    ax=ax2, plot_spec_tot=False, no_leg=True)
-wave_final_A_19, spec_tot_19, ax = aurora.plot_local_spectrum(
-    filepath_19, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
-    ion_exc_rec_dens=[fz[0][-3], fz[0][-2], fz[0][-1]], # He-like, H-like, fully stripped
-    ax=ax2, plot_spec_tot=False, no_leg=True)
+out = aurora.get_local_spectrum(filepath_17, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
+                                ion_exc_rec_dens=[fz[0][-5], fz[0][-4], fz[0][-3]], # Be-like, Li-like, He-like
+                                ax=ax2, plot_spec_tot=False, no_leg=True, plot_all_lines=True)
+wave_final_A_17, spec_ion_17, spec_exc_17, spec_rr_17, spec_dr_17, spec_cx_17, ax = out
+
+out = aurora.get_local_spectrum(filepath_18, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
+                                ion_exc_rec_dens=[fz[0][-4], fz[0][-3], fz[0][-2]], # Li-like, He-like, H-like
+                                ax=ax2,  plot_spec_tot=False, plot_all_lines=True)
+wave_final_A_18, spec_ion_18, spec_exc_18, spec_rr_18, spec_dr_18, spec_cx_18, ax = out
+
+out = aurora.get_local_spectrum(filepath_19, 'Ca', ne_cm3, Te_eV, n0_cm3=0.0,
+                                ion_exc_rec_dens=[fz[0][-3], fz[0][-2], fz[0][-1]], # He-like, H-like, fully stripped
+                                ax=ax2, plot_spec_tot=False, no_leg=True, plot_all_lines=True)
+wave_final_A_19, spec_ion_19, spec_exc_19, spec_rr_19, spec_dr_19, spec_cx_19, ax = out
+
+spec_tot_17 = spec_ion_17+spec_exc_17+spec_rr_17+spec_dr_17+spec_cx_17
+spec_tot_18 = spec_ion_18+spec_exc_18+spec_rr_18+spec_dr_18+spec_cx_18
+spec_tot_19 = spec_ion_19+spec_exc_19+spec_rr_19+spec_dr_19+spec_cx_19
 
 # add plot of total spectrum
 wave_all_A = np.linspace(3.17,3.24, 10000)
-spec_all = interp1d(wave_final_A_18, spec_tot_18, bounds_error=False, fill_value=0.0)(wave_all_A)
-spec_all += interp1d(wave_final_A_17, spec_tot_17, bounds_error=False, fill_value=0.0)(wave_all_A)
+spec_all = interp1d(wave_final_A_17, spec_tot_17, bounds_error=False, fill_value=0.0)(wave_all_A)
+spec_all += interp1d(wave_final_A_18, spec_tot_18, bounds_error=False, fill_value=0.0)(wave_all_A)
 spec_all += interp1d(wave_final_A_19, spec_tot_19, bounds_error=False, fill_value=0.0)(wave_all_A)
 plt.gca().plot(wave_all_A, spec_all, 'k', label='total')
 plt.gca().legend(loc='best').set_draggable(True)
