@@ -9,7 +9,7 @@ import aurora
 from IPython import embed
 
 
-ion = 'Ar'
+ion = 'Ca' #'Ar'
 
 if ion=='Ca':
     Z_ion=20
@@ -29,7 +29,7 @@ else:
     raise ValueError('Specify PEC files for this ion!')
 
 Te_eV = 1000.0 #3.8e3 #1000. #3.5e3 + 300. # add 300 eV for C-Mod instrumental function
-ne_cm3 = 0.6e14
+ne_cm3 = 1e14
 
 fig = plt.figure()
 fig.set_size_inches(10,7, forward=True)
@@ -78,15 +78,15 @@ out = aurora.get_local_spectrum(filepath_h, ion, ne_cm3, Te_eV, n0_cm3=0.0,
                                 dlam_A = 0.0002, ax=ax2, plot_spec_tot=False, no_leg=True, plot_all_lines=True)
 wave_final_h, spec_ion_h, spec_exc_h, spec_rec_h, spec_dr_h, spec_cx_h, ax = out
 
-spec_tot_he = spec_ion_he + spec_exc_he + spec_rec_he + spec_dr_he + spec_cx_he
 spec_tot_li = spec_ion_li + spec_exc_li + spec_rec_li + spec_dr_li + spec_cx_li
+spec_tot_he = spec_ion_he + spec_exc_he + spec_rec_he + spec_dr_he + spec_cx_he
 spec_tot_h = spec_ion_h + spec_exc_h + spec_rec_h + spec_dr_h + spec_cx_h
 
 # add plot of total spectrum
 #wave_all = np.linspace(3.17,3.24, 10000) #A
 wave_all = np.linspace(plt.gca().get_xlim()[0], plt.gca().get_xlim()[1], 10000) #A
-spec_all = interp1d(wave_final_he, spec_tot_he, bounds_error=False, fill_value=0.0)(wave_all)
-spec_all += interp1d(wave_final_li, spec_tot_li, bounds_error=False, fill_value=0.0)(wave_all)
+spec_all = interp1d(wave_final_li, spec_tot_li, bounds_error=False, fill_value=0.0)(wave_all)
+spec_all += interp1d(wave_final_he, spec_tot_he, bounds_error=False, fill_value=0.0)(wave_all)
 spec_all += interp1d(wave_final_h, spec_tot_h, bounds_error=False, fill_value=0.0)(wave_all)
 plt.gca().plot(wave_all, spec_all, 'k', label='total')
 
