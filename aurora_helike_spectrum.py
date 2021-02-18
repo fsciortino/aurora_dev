@@ -16,8 +16,6 @@ if ion=='Ca':
     filepath_h='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca19.dat'
     filepath_he='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca18.dat'
     filepath_li='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca17.dat'
-    #ax2.set_xlim([3.17, 3.215]) # A, He-lke Ca spectrum
-    #ax2.set_xlim([3.0, 3.215]) # includes Ly-a
 
 elif ion=='Ar':
     Z_ion=18
