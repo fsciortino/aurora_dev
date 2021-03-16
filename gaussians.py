@@ -77,7 +77,7 @@ hdf_file=h5_data(f'hdf5_files/gauss_hermite_functions.hdf5',
 
 fig,ax = plt.subplots()
 xx = np.linspace(-5, 5, 1000)
-nvals = np.zeros(6)
+nvals = np.zeros(5)
 for n in np.arange(len(nvals)):
     nn = np.zeros_like(nvals)
     nn[n] = 1.0
@@ -98,5 +98,4 @@ ax.plot(ax.get_xlim(),[0,0],'k-')
 ax.set_ylabel(r'$\phi_n(x)$',fontsize=18)
 ax.set_xlabel(r'$x$',fontsize=18)
 plt.tight_layout()
-
 

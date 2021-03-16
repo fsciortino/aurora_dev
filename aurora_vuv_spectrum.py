@@ -9,7 +9,7 @@ import aurora
 from IPython import embed
 plt.style.use('./plots.mplstyle')
 
-ion = 'Ca' #'Ar'
+ion = 'F' #'Ca' #'Ar'
 
 filepaths = {}
 
@@ -32,6 +32,11 @@ elif ion=='Ar':
     filepaths[19] = '/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar17.dat'
     filepaths[18] = '/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar16.dat'
     filepaths[17] = '/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar15.dat'
+
+elif ion=='F':
+    Z_ion=9
+    filepaths[7] = '/home/sciortino/atomlib/atomdat_master/adf15/f/fs#f7_10A_70A.dat'
+    filepaths[8] = '/home/sciortino/atomlib/atomdat_master/adf15/f/fs#f8_10A_70A.dat'
     
 else:
     raise ValueError('Specify PEC files for this ion!')

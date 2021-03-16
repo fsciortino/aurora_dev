@@ -8,6 +8,7 @@ import aurora
 
 from IPython import embed
 
+plt.style.use('/home/sciortino/tools3/plots.mplstyle')
 
 ion = 'Ca' #'Ar'
 
@@ -27,7 +28,7 @@ else:
     raise ValueError('Specify PEC files for this ion!')
 
 Te_eV = 1000.0 #3.8e3 #1000. #3.5e3 + 300. # add 300 eV for C-Mod instrumental function
-ne_cm3 = 1e14
+ne_cm3 = 1e13 #1e14
 
 fig = plt.figure()
 fig.set_size_inches(10,7, forward=True)
