@@ -40,6 +40,37 @@ mpl.rcParams['xtick.labelsize'] = 16
 mpl.rcParams['ytick.labelsize'] = 16
 mpl.rcParams['legend.fontsize'] = 16
 
+
+def test():
+
+
+    # H-mode
+    shot = 1100305023
+    solps_run='Attempt23' # H-mode
+    path = '/home/sciortino/SOLPS/full_CMOD_runs/Hmode_1100305023'
+    gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
+    so_old = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
+
+    fig,ax = plt.subplots(2)
+    
+    rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so_old.get_radial_prof(so_old.quants['nn'], dz_mm=15., plot=True)
+    rhop_fsa, ne_fsa, rhop_LFS, ne_LFS, rhop_HFS, ne_HFS = so_old.get_radial_prof(so_old.quants['ne'], dz_mm=15.,plot=True) 
+    ax[0].plot(rhop_LFS, np.log10(nn_LFS*1e-6), lw=3, c='r')
+    ax[1].plot(rhop_LFS, np.log10(nn_LFS/ne_LFS), lw=3, c='r', label='SOLPS-ITER H-mode')
+    
+
+    solps_run='Attempt24' # H-mode
+    path = '/home/sciortino/SOLPS/full_CMOD_runs/Hmode_1100305023'
+    gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
+    so_new = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
+    
+    rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so_new.get_radial_prof(so_new.quants['nn'], dz_mm=15., plot=True)
+    rhop_fsa, ne_fsa, rhop_LFS, ne_LFS, rhop_HFS, ne_HFS = so_new.get_radial_prof(so_new.quants['ne'], dz_mm=15., plot=True) 
+    ax[0].plot(rhop_LFS, np.log10(nn_LFS*1e-6), lw=3, c='b')
+    ax[1].plot(rhop_LFS, np.log10(nn_LFS/ne_LFS), lw=3, c='b', label='SOLPS-ITER H-mode')
+    
+
+    
 def plot_lya(shot, ax, c='k', label=''):
 
     num_shade=10
@@ -49,33 +80,35 @@ def plot_lya(shot, ax, c='k', label=''):
     with open(f'/home/sciortino/tools3/neutrals/lyman_data_{shot}.pkl','rb') as f:
         out_Lya = pkl.load(f)
 
-    rhop,roa,R, N1_prof,N1_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc = out_Lya
+    rhop,roa,R, nn_prof,nn_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc = out_Lya
 
     # mask out nan's
-    mask = ~np.isnan(N1_prof)
+    mask = ~np.isnan(nn_prof)
     rhop=rhop[mask]; roa=roa[mask]; R=R[mask]
-    N1_prof=N1_prof[mask]; N1_prof_unc=N1_prof_unc[mask];
+    nn_prof=nn_prof[mask]; nn_prof_unc=nn_prof_unc[mask];
     ne_prof=ne_prof[mask]; ne_prof_unc=ne_prof_unc[mask]
     Te_prof=Te_prof[mask]; Te_prof_unc=Te_prof_unc[mask]
     
-    N1_by_ne_prof = N1_prof/ne_prof
+    nn_by_ne_prof = nn_prof/ne_prof
     
     # ne uncertainty in the SOL also goes to ne<0.... ignore it
-    N1_by_ne_prof_unc = np.sqrt((N1_prof_unc/ne_prof)**2) #+(N1_prof/ne_prof**2)**2*ne_prof_unc**2)  
+    nn_by_ne_prof_unc = np.sqrt((nn_prof_unc/ne_prof)**2) #+(nn_prof/ne_prof**2)**2*ne_prof_unc**2)  
 
-    ax[0].plot(rhop, np.log10(N1_prof), c=c)
+    ax[0].plot(rhop, np.log10(nn_prof), c=c)
     for ij in np.arange(num_shade):
-        ax[0].fill_between(rhop, np.log10(N1_prof)+3*ff*N1_prof_unc/N1_prof*ij/num_shade,
-                           np.log10(N1_prof)-3*ff*N1_prof_unc/N1_prof*ij/num_shade,
+        ax[0].fill_between(rhop, np.log10(nn_prof)+3*ff*nn_prof_unc/nn_prof*ij/num_shade,
+                           np.log10(nn_prof)-3*ff*nn_prof_unc/nn_prof*ij/num_shade,
                            alpha=0.3*(1.-ij/num_shade), color=c)
 
-    ax[1].plot(rhop, np.log10(N1_by_ne_prof),c=c, label='Ly-alpha (expt.) '+label)
+    ax[1].plot(rhop, np.log10(nn_by_ne_prof),c=c, label=r'Ly-alpha '+label)
     for ij in np.arange(num_shade):
-        ax[1].fill_between(rhop,np.log10(N1_by_ne_prof)+3*ff*N1_by_ne_prof_unc/N1_by_ne_prof*ij/num_shade,
-                           np.log10(N1_by_ne_prof)-3*ff*N1_by_ne_prof_unc/N1_by_ne_prof*ij/num_shade,
+        ax[1].fill_between(rhop,np.log10(nn_by_ne_prof)+3*ff*nn_by_ne_prof_unc/nn_by_ne_prof*ij/num_shade,
+                           np.log10(nn_by_ne_prof)-3*ff*nn_by_ne_prof_unc/nn_by_ne_prof*ij/num_shade,
                            alpha=0.3*(1.-ij/num_shade),
                            color=c)
-
+        
+    return rhop,roa,R, nn_prof,nn_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc
+    
 
 def compare_neutral_profs(expt=True):
 
@@ -83,16 +116,15 @@ def compare_neutral_profs(expt=True):
 
     if expt:
         # load and plot Ly-a data
-        plot_lya(1100308004, ax, c='k', label='L-mode')
-        plot_lya(1080416025, ax, c='b', label='I-mode')
-        plot_lya(1100305023, ax, c='r', label='EDA H-mode')
+        _ = plot_lya(1100308004, ax, c='k', label='L-mode')
+        _ = plot_lya(1080416025, ax, c='b', label='I-mode')
+        _ = plot_lya(1100305023, ax, c='r', label='EDA H-mode')
     else:
         # compare SOLPS cases
 
         # L-mode
-        shot = 1100308004; solps_run='Attempt14'  # L-mode (new)
-        path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1100308004/'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
+        shot = 1100308004
+        solps_run, path, gfilepath = load_solps_case(shot)
         so_L = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
 
         rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so_L.get_radial_prof(so_L.quants['nn'], plot=False)
@@ -101,9 +133,8 @@ def compare_neutral_profs(expt=True):
         ax[1].plot(rhop_LFS, np.log10(nn_LFS/ne_LFS), lw=3, c='k', label='SOLPS-ITER L-mode')
 
         # I-mode
-        shot = 1080416025; solps_run='Attempt15N'
-        path = '/home/sciortino/SOLPS/full_CMOD_runs/Imode_1080416025'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
+        shot = 1080416025
+        solps_run, path, gfilepath = load_solps_case(shot)
         so_I = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
 
         rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so_I.get_radial_prof(so_I.quants['nn'], plot=False)
@@ -112,9 +143,8 @@ def compare_neutral_profs(expt=True):
         ax[1].plot(rhop_LFS, np.log10(nn_LFS/ne_LFS), lw=3, c='b', label='SOLPS-ITER I-mode')
 
         # H-mode
-        shot = 1100305023; solps_run='Attempt23' # H-mode
-        path = '/home/sciortino/SOLPS/full_CMOD_runs/Hmode_1100305023'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
+        shot = 1100305023
+        solps_run, path, gfilepath = load_solps_case(shot)
         so_H = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
 
         rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so_H.get_radial_prof(so_H.quants['nn'], plot=False)
@@ -137,14 +167,31 @@ def compare_neutral_profs(expt=True):
     fig.tight_layout()
 
 
-def compare_midplane_n0_with_expt(shot, rhop_solps, n0_solps_cm3):
+def compare_midplane_n0_with_expt(shot):
     '''Compare midplane n0 and n0/ne between SOLPS-ITER and experimental Ly-alpha data.
+
+    shot = 1120917011 # L-mode J. Rice
+    shot = 1100308004  # L-mode (new)
+    shot = 1100305023 # H-mode
+    shot = 1080416025 # I-mode
     '''
 
+    solps_run, path, gfilepath = load_solps_case(shot)
+
+    # load SOLPS results
+    so = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
+
+    # get LFS neutral density from SOLPS
+    rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so.get_radial_prof(so.quants['nn'], plot=False)
+    rhop_solps = rhop_LFS
+    n0_solps_cm3 = nn_LFS*1e-6
+
+    # Now plot
     fig, ax = plt.subplots(1,2, figsize=(12,6),sharex=True)
 
     # load and plot Ly-a data
-    plot_lya(shot, ax)
+    out = plot_lya(shot, ax)
+    rhop,roa,R, nn_prof,nn_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc = out
 
     # Now add SOLPS result
     n0_solps_interp = interp1d(rhop_solps, n0_solps_cm3, bounds_error=False)(rhop)
@@ -158,40 +205,27 @@ def compare_midplane_n0_with_expt(shot, rhop_solps, n0_solps_cm3):
 
     # set convenient limts
     ax[0].set_xlim([np.min(rhop),np.max(rhop)])
-    ax[0].set_ylim([8,13])
-    ax[1].set_ylim([-6,-1])
+    ax[0].set_ylim([8,12])
+    ax[1].set_ylim([-5.5,-2])
     ax[1].legend(loc='best').set_draggable(True)
     fig.tight_layout()
 
+    # limit comparison to range where we have both SOLPS data and Ly-alpha
+    xmin = np.maximum(np.min(rhop[~np.isnan(nn_prof)]), np.min(rhop_solps))
+    xmax = np.minimum(np.max(rhop[~np.isnan(nn_prof)]), np.max(rhop_solps))
+    ax[0].set_xlim([xmin,xmax])
+
+    # turn on grids
+    ax[0].grid('on')
+    ax[1].grid('on')
 
 
 
 def compare_to_TS(shot):
     '''Function to compare SOLPS results to TS data from CMOD.
     '''
-    if shot== 1120917011:
-        # L-mode (J.Rice)
-        solps_run='Attempt75' 
-        path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1120917011/'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
-
-    elif shot==1100308004:
-        # L-mode (new)
-        solps_run='Attempt14'
-        path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1100308004/'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
-
-    elif shot==1100305023:
-        # H-mode
-        solps_run='Attempt23' # H-mode
-        path = '/home/sciortino/SOLPS/full_CMOD_runs/Hmode_1100305023'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
-
-    elif shot==1080416025:
-        # I-mode
-        solps_run='Attempt15N'
-        path = '/home/sciortino/SOLPS/full_CMOD_runs/Imode_1080416025'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
+    
+    solps_run, path, gfilepath = load_solps_case(shot)
 
     # load SOLPS results
     so = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
@@ -302,74 +336,55 @@ def compare_to_TS(shot):
 
     
 
+def load_solps_case(shot):
+
+    if shot== 1120917011:
+        # L-mode (J.Rice)
+        solps_run='Attempt76' 
+        path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1120917011/'
+        gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
+
+    elif shot==1100308004:
+        # L-mode (new)
+        solps_run='Attempt14'
+        path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1100308004/'
+        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
+
+    elif shot==1100305023:
+        # H-mode
+        solps_run='Attempt24' #'Attempt23' # H-mode
+        path = '/home/sciortino/SOLPS/full_CMOD_runs/Hmode_1100305023'
+        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
+
+    elif shot==1080416025:
+        # I-mode
+        solps_run='Attempt18N'
+        path = '/home/sciortino/SOLPS/full_CMOD_runs/Imode_1080416025'
+        gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
+        
+    else:
+        raise ValueError(f'No SOLPS case available for shot {shot}')
+
+    return solps_run, path, gfilepath
 
 
 if __name__=='__main__':
                   
-    device='CMOD_full' #'ITER' #'CMOD_full' #'SPARC'
+    device='CMOD' #'ITER' #'CMOD_full' #'SPARC'
+ 
     if device=='CMOD':
-        # L-mode (old)
-        #shot = 1120917011; case_num = 68 #4 
-        #path = f'/home/sciortino/SOLPS/RR_{shot}_attempts/Attempt{case_num}/Output/'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
 
-        # L-mode (new)
-        #shot = 1100308004; case_num = 14 
-        #path = f'/home/sciortino/SOLPS/RR_Lmode_attempt{case_num}/Output/'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
+        #shot = 1120917011 # L-mode J. Rice
+        shot = 1100308004  # L-mode (new)
+        #shot = 1100305023 # H-mode
+        #shot = 1080416025 # I-mode
 
-        # H-mode
-        #shot = 1100305023; case_num = 23 
-        #path = f'/home/sciortino/SOLPS/RR_Hmode_attempt{case_num}/Output/'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
-
-        # I-mode
-        #shot = 1080416025; case_num = 15  # H-mode
-        #path = f'/home/sciortino/SOLPS/RR_Imode_attempt{case_num}_old/Output/'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
-
-        # I-mode (new)
-        shot = 1080416025; case_num = '15' # '15N'
-        path = f'/home/sciortino/SOLPS/RR_Imode_attempt{case_num}/Output/'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
+        solps_run, path, gfilepath = load_solps_case(shot)
 
         # load lyman-alpha data
         with open(f'/home/sciortino/tools3/neutrals/lyman_data_{shot}.pkl','rb') as f:
             out_expt = pkl.load(f)
-        rhop,roa,R, N1_prof,N1_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc = out_expt
-
-        form='extracted'
-
-        # load SOLPS results
-        so = aurora.solps_case(path, gfilepath, case_num=case_num, form=form)
-
-    elif device=='CMOD_full':
-
-        # L-mode (J.Rice)
-        #shot = 1120917011; solps_run='Attempt75' 
-        #path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1120917011/'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
-
-        # L-mode (new)
-        shot = 1100308004; solps_run='Attempt14'
-        path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1100308004/'
-        gfilepath = f'/home/sciortino/EFIT/gfiles/g1100308004.01049'
-
-        # H-mode
-        #shot = 1100305023; solps_run='Attempt23' # H-mode
-        #path = '/home/sciortino/SOLPS/full_CMOD_runs/Hmode_1100305023'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g1100305023.01075'
-
-        # I-mode
-        #shot = 1080416025; solps_run='Attempt15N'
-        #path = '/home/sciortino/SOLPS/full_CMOD_runs/Imode_1080416025'
-        #path = f'/home/sciortino/SOLPS/RR_Imode_attempt{case_num}_old/Output/'
-        #gfilepath = f'/home/sciortino/EFIT/gfiles/g1080416025.01000'
-
-        # load lyman-alpha data
-        with open(f'/home/sciortino/tools3/neutrals/lyman_data_{shot}.pkl','rb') as f:
-            out_expt = pkl.load(f)
-        rhop,roa,R, N1_prof,N1_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc = out_expt
+        rhop,roa,R, nn_prof,nn_prof_unc,ne_prof,ne_prof_unc,Te_prof,Te_prof_unc = out_expt
 
         # load SOLPS results
         so = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
@@ -470,9 +485,9 @@ if __name__=='__main__':
     so.plot2d_b2(out['line_rad'].sum(1)*1e3, scale='log', label=r'$P_{line,rad}$ [$kW/m^3$]')
 
     if device=='CMOD':
-        overplot_machine(shot, [plt.gca()]) # overplot machine tiles
+        overplot_machine(shot, plt.gca()) # overplot machine tiles
 
-        compare_midplane_n0_with_expt(shot,  rhop_LFS, neut_LFS*1e-6)
+        #compare_midplane_n0_with_expt(shot,  rhop_LFS, neut_LFS*1e-6)
 
 
 

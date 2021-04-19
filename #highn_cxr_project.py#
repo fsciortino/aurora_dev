@@ -40,7 +40,7 @@ mpl.rcParams['legend.fontsize'] = 16
 
 
 # L-mode (J.Rice)
-shot = 1120917011; solps_run='Attempt75' 
+shot = 1120917011; solps_run='Attempt76' 
 path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1120917011/'
 gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
 
@@ -51,7 +51,7 @@ so = aurora.solps_case(path, gfilepath, solps_run=solps_run,form='full')
 # plot some important fields
 fig,ax = plt.subplots(figsize=(8,10))
 overplot_machine(shot, ax)
-so.plot2d_b2(so.quants['nn'], ax=ax, scale='log', label=so.labels['nn'])
+so.plot2d_b2(so.quants['nn'], ax=ax, scale='log', label=so.labels['nn'], ub=1e18)
 so.geqdsk.plot(only2D=True, ax=ax)
 
 
@@ -66,7 +66,7 @@ from scipy.interpolate import griddata
 Z = np.linspace(np.min(so.Z), np.max(so.Z), 200)
 R = 0.69 * np.ones_like(Z)
 nn_vert = griddata((so.R.flatten(),so.Z.flatten()), so.quants['nn'].flatten(),
-                   (R,Z), method='linear') # linear interpolation between two inner boundaries
+         (R,Z), method='linear')
 
 mask = ~np.isnan(nn_vert)
 Z = Z[mask]
@@ -104,6 +104,5 @@ with open(f'nn_{shot}_jr_cxr.dat','w+') as f:
     f.write(' \n')
     f.write(' \n')
     [f.write(f'{val:.4f} ') for val in nn_vert]
-
     f.write(' \n')
     f.write(' \n')

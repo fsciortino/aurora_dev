@@ -40,7 +40,7 @@ mpl.rcParams['legend.fontsize'] = 16
 
 
 # L-mode (J.Rice)
-shot = 1120917011; solps_run='Attempt75' 
+shot = 1120917011; solps_run='Attempt76' 
 path = f'/home/sciortino/SOLPS/full_CMOD_runs/Lmode_1120917011/'
 gfilepath = f'/home/sciortino/EFIT/gfiles/g{shot}.00999_981'  # hard-coded
 
@@ -53,7 +53,7 @@ fig,ax = plt.subplots(figsize=(8,10))
 overplot_machine(shot, ax)
 so.plot2d_b2(so.quants['nn'], ax=ax, scale='log', label=so.labels['nn'])
 so.geqdsk.plot(only2D=True, ax=ax)
-
+plt.gca().grid(False)
 
 # first get radial slice
 rhop_fsa, neut_fsa, rhop_LFS, neut_LFS, rhop_HFS, neut_HFS = so.get_radial_prof(so.quants['nn'], plot=True)
