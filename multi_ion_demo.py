@@ -57,7 +57,7 @@ kin_profs['Te']['decay'] = np.ones(len(Te_profs['Te']))
 
 # set no sources of impurities
 namelist['source_type'] = 'const'
-namelist['Phi0'] = 1e24 #1.0
+namelist['source_rate'] = 1e24 #1.0
 
 # Set up for 2 different ions:
 imp = namelist['imp'] = 'Ca' 

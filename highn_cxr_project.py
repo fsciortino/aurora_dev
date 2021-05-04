@@ -68,15 +68,37 @@ R = 0.69 * np.ones_like(Z)
 nn_vert = griddata((so.R.flatten(),so.Z.flatten()), so.quants['nn'].flatten(),
          (R,Z), method='linear')
 
-mask = ~np.isnan(nn_vert)
-Z = Z[mask]
-nn_vert = nn_vert[mask]
+rhop_vertical = aurora.get_rhop_RZ(R, Z, so.geqdsk)
+ind0 = np.argmin(rhop_vertical)
+rhop_vertical[:ind0] = - rhop_vertical[:ind0]
 
+ind_bot = np.nanargmin(nn_vert[:ind0])
+ind_top = np.nanargmin(nn_vert[ind0:])
+nn_vert[ind_bot:ind0] = np.nan
+nn_vert[ind0:ind0+ind_top] = np.nan
+
+# plot as a function of Z
 plt.figure()
 plt.semilogy(Z, nn_vert)
 plt.xlabel('Z [m]')
 plt.ylabel(r'$n_n$ $[m^{-3}]$')
 plt.tight_layout()
+
+# plot as a function of rhop (set -ve on the bottom)
+plt.figure()
+plt.semilogy(rhop_vertical, nn_vert)
+plt.xlabel(r'$\rho_p$')
+plt.ylabel(r'$n_n$ $[m^{-3}]$')
+plt.tight_layout()
+
+# overplot as a function of abs(rhop)
+plt.figure()
+plt.semilogy(np.abs(rhop_vertical[:ind0]), nn_vert[:ind0], label='bottom')
+plt.semilogy(np.abs(rhop_vertical[ind0:]), nn_vert[ind0:], label='top')
+plt.xlabel(r'$\rho_p$')
+plt.ylabel(r'$n_n$ $[m^{-3}]$')
+plt.tight_layout()
+plt.legend(loc='best').set_draggable(True)
 
 
 with open(f'nn_{shot}_jr_cxr.dat','w+') as f:

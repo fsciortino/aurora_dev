@@ -74,7 +74,7 @@ ax1.axis('off')
 atom_data = aurora.get_atom_data(ion,['scd','acd'])
 
 # always include charge exchange, although n0_cm3 may be 0
-logTe, fz, rates = aurora.get_frac_abundances(atom_data, np.array([ne_cm3,]), np.array([Te_eV,]), plot=False)
+logTe, fz = aurora.get_frac_abundances(atom_data, np.array([ne_cm3,]), np.array([Te_eV,]), plot=False)
 
 wave_all = np.linspace(10, 70, 10000) #A
 spec_all = np.zeros_like(wave_all)

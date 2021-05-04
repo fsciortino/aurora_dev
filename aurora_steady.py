@@ -38,13 +38,13 @@ Te = kp['Te']['vals'] = inputgacode['Te']*1e3  # keV --> eV
 # set impurity species and sources rate to 0
 imp = namelist['imp'] = 'Ar'
 namelist['source_type'] = 'const'
-namelist['Phi0'] = 0.0  # particles/s
+namelist['source_rate'] = 0.0  # particles/s
 
 # get charge state distributions from ionization equilibrium
 atom_data = aurora.atomic.get_atom_data(imp,['scd','acd'])
 
 # get fractional abundances on ne (cm^-3) and Te (eV) grid
-logTe, fz, rates = aurora.atomic.get_frac_abundances(
+logTe, fz = aurora.atomic.get_frac_abundances(
     atom_data, ne, Te, rho =rhop, plot=plot)
 
 # eliminate annoying -ve numbers..

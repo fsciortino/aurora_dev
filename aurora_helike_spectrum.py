@@ -40,7 +40,7 @@ ax2 = plt.subplot2grid((10,1),(1,0),rowspan = 9, colspan = 1, fig=fig, sharex=ax
 atom_data = aurora.get_atom_data(ion,['scd','acd'])
 
 # always include charge exchange, although n0_cm3 may be 0
-logTe, fz, rates = aurora.get_frac_abundances(atom_data, np.array([ne_cm3,]), np.array([Te_eV,]), plot=False)
+logTe, fz = aurora.get_frac_abundances(atom_data, np.array([ne_cm3,]), np.array([Te_eV,]), plot=False)
 
 dlam_A = 0.00015
 
