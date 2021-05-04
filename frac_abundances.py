@@ -32,11 +32,11 @@ Te_vals = inputgacode['Te']*1e3  # keV --> eV
 atom_data = aurora.atomic.get_atom_data(ion,['scd','acd'])
 
 # get fractional abundances on ne (cm^-3) and Te (eV) grid
-logTe, fz, rates = aurora.atomic.get_frac_abundances(
+logTe, fz = aurora.atomic.get_frac_abundances(
     atom_data, ne_vals, Te_vals, rho=rhop, plot=plot)
 
 # compare to fractial abundances obtained with ne*tau=0.1e20 m^-3.s
-logTe, fz, rates = aurora.atomic.get_frac_abundances(
+logTe, fz = aurora.atomic.get_frac_abundances(
     atom_data, ne_vals, Te_vals, rho=rhop, ne_tau=0.1e19,
     plot=plot, ax=plt.gca() if plot else None, ls='--')
 
@@ -58,7 +58,7 @@ for Z in np.arange(30):
         ion = out[list(out.keys())[0]]['symbol']
         atom_data = aurora.atomic.get_atom_data(ion,['scd','acd'])
 
-        logTe, fz, rates = aurora.atomic.get_frac_abundances(
+        logTe, fz = aurora.atomic.get_frac_abundances(
             atom_data, ne_vals, Te_vals, plot=False)
 
         Te_Helike_max.append( 10**logTe[np.argmax(fz[:,-3])])
