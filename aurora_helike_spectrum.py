@@ -8,7 +8,17 @@ import aurora
 
 from IPython import embed
 
-plt.style.use('/home/sciortino/tools3/plots.mplstyle')
+#plt.style.use('/home/sciortino/tools3/plots.mplstyle')
+
+import matplotlib as mpl
+mpl.rcParams['axes.titlesize'] = 24
+mpl.rcParams['axes.labelsize'] = 20
+mpl.rcParams['lines.linewidth'] = 1.5 #3
+mpl.rcParams['lines.markersize'] = 10
+mpl.rcParams['xtick.labelsize'] = 16
+mpl.rcParams['ytick.labelsize'] = 16
+mpl.rcParams['legend.fontsize'] = 16
+
 
 ion = 'Ca' #'Ar'
 
@@ -27,11 +37,12 @@ elif ion=='Ar':
 else:
     raise ValueError('Specify PEC files for this ion!')
 
-Te_eV = 1e3 #3.5e3 #1000.0 #3.8e3 #1000. #3.5e3 + 300. # add 300 eV for C-Mod instrumental function
+Te_eV = 3.5e3 #1000.0 #3.8e3 #1000. #3.5e3 + 300. # add 300 eV for C-Mod instrumental function
 ne_cm3 = 1e14 #1e13 #1e14
 
 fig = plt.figure()
-fig.set_size_inches(10,7, forward=True)
+#fig.set_size_inches(10,7, forward=True)
+fig.set_size_inches(9,6, forward=True)
 ax1 = plt.subplot2grid((10,1),(0,0),rowspan = 1, colspan = 1, fig=fig)
 ax2 = plt.subplot2grid((10,1),(1,0),rowspan = 9, colspan = 1, fig=fig, sharex=ax1)
 
@@ -79,7 +90,7 @@ ax2.plot([], [], c='b', ls='--', label='excitation')
 ax2.plot([], [], c='g', ls='--', label='radiative recomb')
 ax2.plot([], [], c='m', ls='--', label='dielectronic recomb')
 #ax2.plot([], [], c='c', ls='--', label='CX recomb')
-plt.gca().legend(loc='best').set_draggable(True)
+#plt.gca().legend(loc='best').set_draggable(True)
 
 
 with open('/home/sciortino/usr/python3modules/bsfc/data/hirexsr_wavelengths.csv', 'r') as f:

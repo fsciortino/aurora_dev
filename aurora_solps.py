@@ -440,7 +440,7 @@ if __name__=='__main__':
 
 
     if device=='CMOD':
-        overplot_machine(shot, [plt.gca()]) # overplot machine tiles
+        overplot_machine(shot, plt.gca()) # overplot machine tiles
 
 
     # compare SOLPS results at midplane with FSA
@@ -463,7 +463,7 @@ if __name__=='__main__':
     filetypes=['acd','scd','ccd']
     atom_data = aurora.get_atom_data(imp,filetypes)
 
-    logTe, fz, rate_coeffs = aurora.get_frac_abundances(
+    logTe, fz = aurora.get_frac_abundances(
         atom_data,ne_cm3,Te_eV, n0_by_ne=n0_cm3/ne_cm3, plot=False)  # added n0
 
     frac=0.01  # 1%
@@ -479,7 +479,7 @@ if __name__=='__main__':
     so.plot2d_b2(out['tot']*1e3, scale='log', label=r'$P_{rad}$ [$kW/m^3$]')
 
     if device=='CMOD':
-        overplot_machine(shot, [plt.gca()]) # overplot machine tiles
+        overplot_machine(shot, plt.gca()) # overplot machine tiles
 
     # plot total line radiated power
     so.plot2d_b2(out['line_rad'].sum(1)*1e3, scale='log', label=r'$P_{line,rad}$ [$kW/m^3$]')
@@ -515,12 +515,18 @@ if __name__=='__main__':
     ###### Comparison with KN1D #####
     rhop_fsa, ne_fsa, rhop_LFS, ne_LFS, rhop_HFS, ne_HFS = so.get_radial_prof(so.quants['ne'], plot=False)
     rhop_fsa, Te_fsa, rhop_LFS, Te_LFS, rhop_HFS, Te_HFS = so.get_radial_prof(so.quants['Te'], plot=False)
+    rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so.get_radial_prof(so.quants['nn'], plot=False)
+    rhop_fsa, Tn_fsa, rhop_LFS, Tn_LFS, rhop_HFS, Tn_HFS = so.get_radial_prof(so.quants['Tn'], plot=False)
     rhop_fsa, nm_fsa, rhop_LFS, nm_LFS, rhop_HFS, nm_HFS = so.get_radial_prof(so.quants['nm'], plot=False)
     rhop_fsa, Tm_fsa, rhop_LFS, Tm_LFS, rhop_HFS, Tm_HFS = so.get_radial_prof(so.quants['Tm'], plot=False)
 
     # pressure near the wall
-    #p_H2_Pa = nm_LFS[-1]*Tm_LFS[-1]*constants.e # Pascals
-    p_H2_Pa = np.nanmax(nm_LFS)*3.0*constants.e # Pascals
+    p_H2_Pa = 2./3. * nm_LFS[-2]*Tm_LFS[-2]*constants.e # Pascals
+    p_H2_Pa += 2./3. * nn_LFS[-2]*Tn_LFS[-2]*constants.e # Pascals
+
+    # convert pressure from Pa to mTorr
+    p_H2_mTorr = (p_H2_Pa/133.32)*1e3  # https://en.wikipedia.org/wiki/Torr
+
     rhop_edge = rhop_LFS[-1]
 
     # estimate connection lengths from the EFIT g-EQDSK
@@ -536,9 +542,6 @@ if __name__=='__main__':
     Rwall = aurora.rad_coord_transform(np.max(rhop_LFS),'rhop','Rmid', geqdsk)
     bound_sep_cm = (Rwall - Rsep)*1e2
     lim_sep_cm = bound_sep_cm*2./3. # doesn't matter, only for plotting
-
-    # convert pressure from Pa to mTorr
-    p_H2_mTorr= p_H2_Pa/133.32*1e3  # https://en.wikipedia.org/wiki/Torr
 
     if device.startswith('CMOD'):
         if '/home/sciortino/tools3/neutrals' not in sys.path:
