@@ -38,6 +38,41 @@ def overplot_spectra(pec_info, Te_eV, ne_cm3, ion):
 
 
 
+def load_solps_cdens():
+    
+    # load DIII-D SOLPS case with C
+    SOLPS_path = '/fusion/projects/toolbox/sciortinof/SOLPS/Lmode_180533_2300/'
+    SOLPS_run = 'test_shift_out_Csput_Y4pc_allwall'
+    SOLPS_geqdsk = '/fusion/projects/toolbox/sciortinof/SOLPS/Lmode_180533_2300/baserun/180533_2300_efit05.gfile'
+
+
+    # Order of ions in b2fstate['na'] is [D0, D+1, C0, C+1, C+2, …], see so.b2_species.
+    # Recall that if EIRENE is being used the neutral (D0, C0, ...) densities in b2fstate are nonsense; neutral results are in fort44 and fort46.
+    so = aurora.solps_case(SOLPS_path, SOLPS_geqdsk, SOLPS_run)
+
+    so.plot2d_b2(so.quants['nn'], scale='log', label=so.labels['nn'])
+    so.geqdsk.plot(only2D=True)
+
+    # C3+ density
+    so.plot2d_b2(so.b2fstate['na'][5], scale='log', label=r'$n_{C5+}$ [$m^{-3}$]')
+    so.geqdsk.plot(only2D=True)
+
+    rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so.get_radial_prof(so.quants['nn'], plot=True)
+    plt.gca().set_ylabel(r'$n_n$ [$m^{-3}$]')
+    plt.gca().grid(True)
+    plt.tight_layout()
+    rhop_fsa, ne_fsa, rhop_LFS, ne_LFS, rhop_HFS, ne_HFS = so.get_radial_prof(so.quants['ne'], plot=False)
+
+    fig, ax = plt.subplots()
+    ax.semilogy(rhop_fsa, nn_fsa / ne_fsa, label='FSA')
+    ax.semilogy(rhop_LFS, nn_LFS / ne_LFS, label='LFS midplane')
+    ax.semilogy(rhop_HFS, nn_HFS / ne_HFS, label='HFS midplane')
+    ax.grid('on')
+    ax.legend(loc='best').set_draggable(True)
+    ax.set_xlabel(r'$\rho_p$')
+    ax.set_ylabel(r'$n_n/n_e$')
+    plt.tight_layout()
+
 if __name__=='__main__':
  
     ion = 'C' #'Al' #'F' # 'Ca'
@@ -104,39 +139,7 @@ if __name__=='__main__':
         cs = int(re.split('(\d+)', species)[1])
         pec_info[cs] = pec_file
 
-    #overplot_spectra(pec_info, Te_eV, ne_cm3, ion)
+    overplot_spectra(pec_info, Te_eV, ne_cm3, ion)
 
 
-
-    # load DIII-D SOLPS case with C
-    SOLPS_path = '/fusion/projects/toolbox/sciortinof/SOLPS/Lmode_180533_2300/'
-    SOLPS_run = 'test_shift_out_Csput_Y4pc_allwall'
-    SOLPS_geqdsk = '/fusion/projects/toolbox/sciortinof/SOLPS/Lmode_180533_2300/baserun/180533_2300_efit05.gfile'
-
-
-    # Order of ions in b2fstate['na'] is [D0, D+1, C0, C+1, C+2, …], see so.b2_species.
-    # Recall that if EIRENE is being used the neutral (D0, C0, ...) densities in b2fstate are nonsense; neutral results are in fort44 and fort46.
-    so = aurora.solps_case(SOLPS_path, SOLPS_geqdsk, SOLPS_run)
-
-    so.plot2d_b2(so.quants['nn'], scale='log', label=so.labels['nn'])
-    so.geqdsk.plot(only2D=True)
-
-    # C3+ density
-    so.plot2d_b2(so.b2fstate['na'][5], scale='log', label=r'$n_{C5+}$ [$m^{-3}$]')
-    so.geqdsk.plot(only2D=True)
-
-    rhop_fsa, nn_fsa, rhop_LFS, nn_LFS, rhop_HFS, nn_HFS = so.get_radial_prof(so.quants['nn'], plot=True)
-    plt.gca().set_ylabel(r'$n_n$ [$m^{-3}$]')
-    plt.gca().grid(True)
-    plt.tight_layout()
-    rhop_fsa, ne_fsa, rhop_LFS, ne_LFS, rhop_HFS, ne_HFS = so.get_radial_prof(so.quants['ne'], plot=False)
-
-    fig, ax = plt.subplots()
-    ax.semilogy(rhop_fsa, nn_fsa / ne_fsa, label='FSA')
-    ax.semilogy(rhop_LFS, nn_LFS / ne_LFS, label='LFS midplane')
-    ax.semilogy(rhop_HFS, nn_HFS / ne_HFS, label='HFS midplane')
-    ax.grid('on')
-    ax.legend(loc='best').set_draggable(True)
-    ax.set_xlabel(r'$\rho_p$')
-    ax.set_ylabel(r'$n_n/n_e$')
-    plt.tight_layout()
+    #cdens = load_solps_cdens()
