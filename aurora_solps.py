@@ -409,6 +409,13 @@ if __name__=='__main__':
         raise ValueError('Unrecognized case')
 
 
+    # nice-looking 2D plot with flux contours
+    fig,ax = plt.subplots(figsize=(8,10))
+    overplot_machine(shot, ax)
+    so.plot2d_b2(so.quants['nn'], ax=ax, scale='log', label=so.labels['nn'])
+    so.geqdsk.plot(only2D=True, ax=ax)
+    plt.gca().grid(False)
+    
 
     # plot some important fields
     fig,axs = plt.subplots(1,4, figsize=(20,6),sharex=True) 
