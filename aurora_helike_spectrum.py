@@ -1,4 +1,20 @@
-import numpy as np, sys
+'''Script to demonstrate production of synthetic spectra for the He-like Ar spectrum
+using Aurora and atomic data originally compiled in the atomDB database by A. Foster.
+
+NB: this is not ADAS data.
+
+See application of this spectral model for the case of Ca ions in
+F. Sciortino et al 2021 Nucl. Fusion 61 126060
+https://iopscience.iop.org/article/10.1088/1741-4326/ac32f2 
+
+Note: this script creates a single local synthetic spectrum. Doing such calculations
+in an iterative framework using line-integrated data requires significant numerical optimization. 
+Please write to francesco.sciortino@ipp.mpg.de for help on setting this up.
+
+F.Sciortino, 12/14/2021
+
+'''
+import numpy as np, sys, os
 import matplotlib.pyplot as plt
 from scipy.constants import e as q_electron,k as k_B, h, m_p, c as c_speed
 plt.ion()
@@ -8,7 +24,7 @@ import aurora
 
 from IPython import embed
 
-#plt.style.use('/home/sciortino/tools3/plots.mplstyle')
+home = os.path.expanduser('~')
 
 import matplotlib as mpl
 mpl.rcParams['axes.titlesize'] = 24
@@ -20,32 +36,30 @@ mpl.rcParams['ytick.labelsize'] = 16
 mpl.rcParams['legend.fontsize'] = 16
 
 
-ion = 'Ca' #'Ar'
+ion = 'Ar' #'Ca' #'Ar'
 
 if ion=='Ca':
     Z_ion=20
-    filepath_h='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca19.dat'
-    filepath_he='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca18.dat'
-    filepath_li='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ca17.dat'
+    filepath_h = home+'/atomlib/atomdat_master/atomdb/pec#ca19.dat'
+    filepath_he = home+'/atomlib/atomdat_master/atomdb/pec#ca18.dat'
+    filepath_li = home+'/atomlib/atomdat_master/atomdb/pec#ca17.dat'
 
 elif ion=='Ar':
     Z_ion=18
-    filepath_h='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar17.dat'
-    filepath_he='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar16.dat'
-    filepath_li='/home/sciortino/atomlib/atomdat_master/atomdb/pec#ar15.dat'
+    filepath_h = home+'/atomlib/atomdat_master/atomdb/pec#ar17.dat'
+    filepath_he = home+'/atomlib/atomdat_master/atomdb/pec#ar16.dat'
+    filepath_li = home+'/atomlib/atomdat_master/atomdb/pec#ar15.dat'
     
 else:
     raise ValueError('Specify PEC files for this ion!')
 
-Te_eV = 3.5e3 #1000.0 #3.8e3 #1000. #3.5e3 + 300. # add 300 eV for C-Mod instrumental function
-ne_cm3 = 1e14 #1e13 #1e14
+Te_eV = 3.5e3
+ne_cm3 = 1e14
 
 fig = plt.figure()
-#fig.set_size_inches(10,7, forward=True)
 fig.set_size_inches(9,6, forward=True)
 ax1 = plt.subplot2grid((10,1),(0,0),rowspan = 1, colspan = 1, fig=fig)
 ax2 = plt.subplot2grid((10,1),(1,0),rowspan = 9, colspan = 1, fig=fig, sharex=ax1)
-
 
 # Find fractional abundances
 atom_data = aurora.get_atom_data(ion,['scd','acd'])
@@ -76,7 +90,6 @@ spec_tot_he = spec_ion_he + spec_exc_he + spec_rec_he + spec_dr_he + spec_cx_he
 spec_tot_h = spec_ion_h + spec_exc_h + spec_rec_h + spec_dr_h + spec_cx_h
 
 # add plot of total spectrum
-#wave_all = np.linspace(3.17,3.24, 10000) #A
 wave_all = np.linspace(plt.gca().get_xlim()[0], plt.gca().get_xlim()[1], 10000) #A
 spec_all = interp1d(wave_final_li, spec_tot_li, bounds_error=False, fill_value=0.0)(wave_all)
 spec_all += interp1d(wave_final_he, spec_tot_he, bounds_error=False, fill_value=0.0)(wave_all)
@@ -93,7 +106,7 @@ ax2.plot([], [], c='m', ls='--', label='dielectronic recomb')
 #plt.gca().legend(loc='best').set_draggable(True)
 
 
-with open('/home/sciortino/usr/python3modules/bsfc/data/hirexsr_wavelengths.csv', 'r') as f:
+with open(home+'/bsfc/data/hirexsr_wavelengths.csv', 'r') as f:
     lineData = [s.strip().split(',') for s in f.readlines()]
     lineLam = np.array([float(ld[1]) for ld in lineData[2:]])
     lineZ = np.array([int(ld[2]) for ld in lineData[2:]])
@@ -112,4 +125,3 @@ for ii,_line in enumerate(xics_lams):
 ax1.axis('off')
 
 
-ax2.set_xlim([3.173,3.215])
